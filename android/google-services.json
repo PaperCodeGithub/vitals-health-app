@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "261322356246",
+    "project_id": "vitals-health-app",
+    "storage_bucket": "vitals-health-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:261322356246:android:ec95f68ee7bc0e0408e737",
+        "android_client_info": {
+          "package_name": "com.example.vitals"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "261322356246-3f0aiaevk276q5bdvgg3ldgt6a7r2pjk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vitals",
+            "certificate_hash": "045cabd3cfe574cb76eebe4581d763c392520e2a"
+          }
+        },
+        {
+          "client_id": "261322356246-l3v9veb5h6migtlvbclsi5kvqd0hdko6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDv2jC_mVB0I-QTVXT42Dxw9FOuMOLLm0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "261322356246-l3v9veb5h6migtlvbclsi5kvqd0hdko6.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "261322356246-5on70lqhi2sfmdab97pfiv55b568bccb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.vitals"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

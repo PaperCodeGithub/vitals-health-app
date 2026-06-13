@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "261322356246",
+    "project_id": "vitals-health-app",
+    "storage_bucket": "vitals-health-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:261322356246:android:ec95f68ee7bc0e0408e737",
+        "android_client_info": {
+          "package_name": "com.example.vitals"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDv2jC_mVB0I-QTVXT42Dxw9FOuMOLLm0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
