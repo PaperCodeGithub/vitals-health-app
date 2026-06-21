@@ -8,14 +8,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// 1. Read the .env file
-def envProperties = new Properties()
-def envFile = rootProject.file('../.env')
-if (envFile.exists()) {
-    envFile.withInputStream { stream ->
-        envProperties.load(stream)
-    }
-}
+
 
 android {
     namespace = "com.example.vitals"
@@ -41,9 +34,6 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        manifestPlaceholders = [
-            MAPS_API_KEY: envProperties.getProperty("GOOGLE_MAPS_API_KEY") ?: "DEFAULT_KEY"
-        ]
     }
 
     buildTypes {

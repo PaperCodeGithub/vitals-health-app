@@ -61,8 +61,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     ));
 
     try {
-      // TODO: Actually update Firebase here
-      // await DatabaseService.instance.updateEmergencyStatus(newStatus);
+
+
     } catch (e) {
       emit(HomeLoaded(
         userName: currentState.userName,

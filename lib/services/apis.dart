@@ -173,10 +173,10 @@ class DatabaseService {
         radiusInKm: searchRadiusKm,
         field: 'location',
         queryBuilder: (query) => query.where('accountType', isEqualTo: 'clinic'),
-                geopointFrom: (Map<String, dynamic> obj) {
-                  final locationMap = obj['location'] as Map<String, dynamic>;
-                  return locationMap['geopoint'] as GeoPoint;
-                },
+        geopointFrom: (Map<String, dynamic> obj) {
+          final locationMap = obj['location'] as Map<String, dynamic>;
+          return locationMap['geopoint'] as GeoPoint;
+        },
     );
 
     return docs.map((doc) => doc.id).toList();
