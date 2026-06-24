@@ -14,19 +14,23 @@ class NearbyClinicsBloc extends Bloc<NearbyClinicsEvent, NearbyClinicsState> {
     try {
       final GeoFirePoint center = GeoFirePoint(GeoPoint(event.latitude, event.longitude));
       const double searchRadiusKm = 10.0;
-      final collectionRef = FirebaseFirestore.instance.collection('users');
 
+      // 1. Point to the new 'clinic' collection
+      final collectionRef = FirebaseFirestore.instance.collection('clinic');
+
+      // 2. Remove queryBuilder (no longer needed)
+      // 3. Add .first at the end to convert the Stream to a Future
       List<DocumentSnapshot<Map<String, dynamic>>> docs = await GeoCollectionReference(collectionRef).fetchWithin(
         center: center,
         radiusInKm: searchRadiusKm,
         field: 'location',
-        queryBuilder: (query) => query.where('accountType', isEqualTo: 'clinic'),
         geopointFrom: (Map<String, dynamic> obj) {
           final locationMap = obj['location'] as Map<String, dynamic>;
           return locationMap['geopoint'] as GeoPoint;
         },
       );
 
+      // Keep your search filter logic exactly as is
       if (event.searchQuery != null && event.searchQuery!.isNotEmpty) {
         final queryLower = event.searchQuery!.toLowerCase();
         docs = docs.where((doc) {

@@ -13,6 +13,7 @@ import 'package:vitals/tabs/chatAI/chatAI.dart';
 import 'package:vitals/tabs/home/home.dart';
 import 'package:vitals/tabs/settings/settings.dart';
 
+import 'bloc/appointments/appointments_tab.dart';
 import 'firebase_options.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
@@ -180,7 +181,7 @@ class _BottomNavLayout extends State<BottomNavLayout>{
 
   List<Widget> get _screens => [
     Center(child: HomeWidget(accountType: widget.accountType)),
-    const Center(child: Text('Appointments Screen', style: TextStyle(fontSize: 24))),
+    const Center(child: AppointmentsTab()),
     const Center(child: NearbyDoctorsScreen()),
     const Center(child: ChatAiScreen()),
     Center(child: SettingsScreen(accountType: widget.accountType,)),

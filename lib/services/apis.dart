@@ -1,6 +1,3 @@
-
-import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geoflutterfire_plus/geoflutterfire_plus.dart';
@@ -38,10 +35,17 @@ class DatabaseService {
     required String weight,
     required String bloodGroup,
   }) async {
-    if(_currentUid.isEmpty) throw Exception("User is not logged in or uid is empty");
+    if (_currentUid.isEmpty) throw Exception("User is not logged in or uid is empty");
 
-    return await _db.collection('users').doc(_currentUid).set({
-      'accountType': 'patient',
+    final WriteBatch batch = _db.batch();
+
+    final userRef = _db.collection('users').doc(_currentUid);
+    final patientRef = _db.collection('patient').doc(_currentUid);
+
+    batch.set(userRef, {'accountType': 'patient'});
+
+    batch.set(patientRef, {
+      'id': _currentUid,
       'name': name,
       'age': age,
       'gender': gender,
@@ -49,6 +53,8 @@ class DatabaseService {
       'weight': weight,
       'bloodGroup': bloodGroup,
     });
+
+    return await batch.commit();
   }
 
   Future<void> createClinicProfile({
@@ -62,12 +68,18 @@ class DatabaseService {
     required String fee,
     required bool emergency,
   }) async {
-    if(_currentUid.isEmpty) throw Exception("User is not logged in or uid is empty");
+    if (_currentUid.isEmpty) throw Exception("User is not logged in or uid is empty");
 
     final GeoFirePoint clinicLocation = GeoFirePoint(GeoPoint(lat, lng));
+    final WriteBatch batch = _db.batch();
 
-    return await _db.collection('users').doc(_currentUid).set({
-      'accountType': 'clinic',
+    final userRef = _db.collection('users').doc(_currentUid);
+    final clinicRef = _db.collection('clinic').doc(_currentUid);
+
+    batch.set(userRef, {'accountType': 'clinic'});
+
+    batch.set(clinicRef, {
+      'id': _currentUid,
       'name': name,
       'lat': lat,
       'lng': lng,
@@ -76,14 +88,25 @@ class DatabaseService {
       'license': license,
       'hours': hours,
       'fee': fee,
-      'emergency': false,
-      'location' : clinicLocation.data,
+      'emergency': emergency,
+      'location': clinicLocation.data,
     });
+
+    return await batch.commit();
   }
 
   Future<DocumentSnapshot> getProfile() async {
-    final DocumentSnapshot snapshot = await _db.collection('users').doc(_currentUid).get();
-    return snapshot;
+    if (_currentUid.isEmpty) throw Exception("User is not logged in or uid is empty");
+
+    final String accountType = await getAccountType();
+
+    if (accountType == 'clinic') {
+      return await _db.collection('clinic').doc(_currentUid).get();
+    } else if (accountType == 'patient') {
+      return await _db.collection('patient').doc(_currentUid).get();
+    } else {
+      throw Exception("Unknown account type");
+    }
   }
 
   Future<void> updatePatientProfile({
@@ -93,11 +116,10 @@ class DatabaseService {
     required String height,
     required String weight,
     required String bloodGroup,
-
   }) async {
-    if(_currentUid.isEmpty) throw Exception("User is not logged in or uid is empty");
+    if (_currentUid.isEmpty) throw Exception("User is not logged in or uid is empty");
 
-    return await _db.collection('users').doc(_currentUid).update({
+    return await _db.collection('patient').doc(_currentUid).update({
       'name': name,
       'age': age,
       'gender': gender,
@@ -118,11 +140,11 @@ class DatabaseService {
     required String fee,
     required bool emergency,
   }) async {
-    if(_currentUid.isEmpty) throw Exception("User is not logged in or uid is empty");
+    if (_currentUid.isEmpty) throw Exception("User is not logged in or uid is empty");
 
     GeoFirePoint clinicLocation = GeoFirePoint(GeoPoint(lat, lng));
 
-    return await _db.collection('users').doc(_currentUid).update({
+    return await _db.collection('clinic').doc(_currentUid).update({
       'name': name,
       'lat': lat,
       'lng': lng,
@@ -132,7 +154,7 @@ class DatabaseService {
       'hours': hours,
       'fee': fee,
       'emergency': emergency,
-      'location' : clinicLocation.data,
+      'location': clinicLocation.data,
     });
   }
 
@@ -164,19 +186,17 @@ class DatabaseService {
     final GeoFirePoint center = GeoFirePoint(GeoPoint(userLat, userLng));
     const double searchRadiusKm = 10.0;
 
-    final collectionRef = FirebaseFirestore.instance.collection('users');
+    final collectionRef = FirebaseFirestore.instance.collection('clinic');
 
     final List<DocumentSnapshot<Map<String, dynamic>>> docs =
-    await GeoCollectionReference(collectionRef)
-        .fetchWithin(
-        center: center,
-        radiusInKm: searchRadiusKm,
-        field: 'location',
-        queryBuilder: (query) => query.where('accountType', isEqualTo: 'clinic'),
-        geopointFrom: (Map<String, dynamic> obj) {
-          final locationMap = obj['location'] as Map<String, dynamic>;
-          return locationMap['geopoint'] as GeoPoint;
-        },
+    await GeoCollectionReference(collectionRef).fetchWithin(
+      center: center,
+      radiusInKm: searchRadiusKm,
+      field: 'location',
+      geopointFrom: (Map<String, dynamic> obj) {
+        final locationMap = obj['location'] as Map<String, dynamic>;
+        return locationMap['geopoint'] as GeoPoint;
+      },
     );
 
     return docs.map((doc) => doc.id).toList();
@@ -186,4 +206,82 @@ class DatabaseService {
     await _auth.signOut();
   }
 
+  Future<void> bookAppointment(String patientId, String clinicId, DateTime appointmentDatetime) async {
+    return await _db.collection('appointments')
+        .doc(clinicId)
+        .collection("bookings").doc()
+        .set({
+          'patientId': patientId,
+          'appointmentTime': Timestamp.fromDate(appointmentDatetime),
+          'status': 'pending',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+  }
+
+  Future<List<DocumentSnapshot>> fetchAppointmentsForMyClinic(String clinicId) async {
+    try {
+      final QuerySnapshot snapshot = await _db
+          .collection('appointments')
+          .doc(clinicId)
+          .collection('bookings')
+          .orderBy('appointmentTime', descending: false)
+          .get();
+
+      return snapshot.docs;
+    } catch (e) {
+      print("Error fetching clinic appointments: $e");
+      rethrow;
+    }
+  }
+
+  Future<List<DocumentSnapshot>> fetchAppointmentsForMyPatient() async {
+    if (_currentUid.isEmpty) throw Exception("User is not logged in");
+
+    try {
+      final QuerySnapshot snapshot = await _db
+          .collectionGroup('bookings')
+          .where('patientId', isEqualTo: _currentUid)
+          .orderBy('appointmentTime', descending: false)
+          .get();
+
+      return snapshot.docs;
+    } catch (e) {
+      print("Error fetching patient appointments: $e");
+      rethrow;
+    }
+  }
+
+  Future<List<DocumentSnapshot>> fetchPaginatedAppointments({
+    int limit = 10,
+    DocumentSnapshot? lastDocument
+  }) async {
+    if (_currentUid.isEmpty) throw Exception("User is not logged in");
+
+    final String accountType = await getAccountType();
+    Query query;
+
+    if (accountType == 'clinic') {
+      query = _db
+          .collection('appointments')
+          .doc(_currentUid)
+          .collection('bookings')
+          .orderBy('appointmentTime', descending: false)
+          .limit(limit);
+    } else if (accountType == 'patient') {
+      query = _db
+          .collectionGroup('bookings')
+          .where('patientId', isEqualTo: _currentUid)
+          .orderBy('appointmentTime', descending: false)
+          .limit(limit);
+    } else {
+      throw Exception("Unknown account type");
+    }
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    final QuerySnapshot snapshot = await query.get();
+    return snapshot.docs;
+  }
 }

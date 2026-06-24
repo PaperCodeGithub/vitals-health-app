@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart' as geo_service;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:vitals/services/apis.dart';
 
 import '../../bloc/nearby/nearby_clinics_bloc.dart';
 import '../../bloc/nearby/nearby_clinics_event.dart';
@@ -329,7 +331,7 @@ class _NearbyDoctorsViewState extends State<_NearbyDoctorsView> {
                                     delegate: SliverChildBuilderDelegate(
                                           (context, index) {
                                         final doc = state.clinics[index];
-                                        return _buildClinicCard(doc.data()!, glassColor, borderColor, textColor, bgColor, isDark);
+                                        return _buildClinicCard(context, doc.data()!, glassColor, borderColor, textColor, bgColor, isDark);
                                       },
                                       childCount: state.clinics.length,
                                     ),
@@ -365,74 +367,285 @@ class _NearbyDoctorsViewState extends State<_NearbyDoctorsView> {
     );
   }
 
-  Widget _buildClinicCard(Map<String, dynamic> data, Color glassColor, Color borderColor, Color textColor, Color bgColor, bool isDark) {
-    final cardColor = isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.02);
-    final name = data['name'] ?? 'Clinic';
-    final ph = data['phone'] ?? 'N/A';
-    final address = data['address'] ?? 'N/A';
-    final fee = data['fee'] ?? 'N/A';
+  Widget _buildClinicCard(BuildContext context, Map<String, dynamic> data, Color glassColor, Color borderColor, Color textColor, Color bgColor, bool isDark) {
+    {
+      final cardColor = isDark ? Colors.white.withOpacity(0.03) : Colors.black
+          .withOpacity(0.02);
+      final name = data['name'] ?? 'Clinic';
+      final ph = data['phone'] ?? 'N/A';
+      final address = data['address'] ?? 'N/A';
+      final fee = data['fee'] ?? 'N/A';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(30), border: Border.all(color: borderColor)),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 70, height: 70,
-                decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                child: const Icon(CupertinoIcons.heart_fill, color: Colors.blueAccent, size: 30),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name, style: GoogleFonts.outfit(color: textColor, fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
-                    SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(CupertinoIcons.phone_fill, color: Colors.grey.shade500, size: 16),
-                        SizedBox(width: 4),
-                        Text(ph, style: TextStyle(color: Colors.grey.shade500)),
-                        const Spacer(),
-                        Text(fee + " INR", style: TextStyle(color: Colors.grey.shade500)),
-                      ],
-                      ),
-                    SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(Icons.location_on, size: 16, color: Colors.grey.shade500),
-                        SizedBox(width: 6),
-                        Text(address, style: TextStyle(color: Colors.grey.shade500)),
-                      ]
-                    ),
-                  ],
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: cardColor,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: borderColor)),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 70, height: 70,
+                  decoration: BoxDecoration(
+                      color: Colors.blueAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: const Icon(
+                      CupertinoIcons.heart_fill, color: Colors.blueAccent,
+                      size: 30),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(color: textColor, borderRadius: BorderRadius.circular(100)),
-                child: Text("Book Appointment", style: GoogleFonts.inter(color: bgColor, fontWeight: FontWeight.bold, fontSize: 13)),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(color: textColor, borderRadius: BorderRadius.circular(100)),
-                child: Text("Directions", style: GoogleFonts.inter(color: bgColor, fontWeight: FontWeight.bold, fontSize: 13)),
-              )
-            ],
-          )
-        ],
-      ),
-    );
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: GoogleFonts.outfit(color: textColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5)),
+                      SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(CupertinoIcons.phone_fill,
+                              color: Colors.grey.shade500, size: 16),
+                          SizedBox(width: 4),
+                          Text(ph, style: TextStyle(color: Colors.grey
+                              .shade500)),
+                          const Spacer(),
+                          Text(fee + " INR", style: TextStyle(color: Colors.grey
+                              .shade500)),
+                        ],
+                      ),
+                      SizedBox(height: 6),
+                      Row(
+                          children: [
+                            Icon(Icons.location_on, size: 16,
+                                color: Colors.grey.shade500),
+                            SizedBox(width: 6),
+                            Text(address, style: TextStyle(color: Colors.grey
+                                .shade500)),
+                          ]
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    _showBookingBottomSheet(context, data);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(color: textColor,
+                        borderRadius: BorderRadius.circular(100)),
+                    child: Text("Book Appointment", style: GoogleFonts.inter(
+                        color: bgColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13)),
+                  ),
+                ),
+
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(color: textColor,
+                      borderRadius: BorderRadius.circular(100)),
+                  child: Text("Directions", style: GoogleFonts.inter(
+                      color: bgColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13)),
+                )
+              ],
+            )
+          ],
+        ),
+      );
+    }
   }
+}
+
+void _showBookingBottomSheet(BuildContext context, Map<String, dynamic> clinicData) {
+  final clinicName = clinicData['name'] ?? 'this clinic';
+  String clinicId = clinicData['id'];
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final sheetBgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+  final textColor = isDark ? Colors.white : Colors.black;
+
+  FirebaseAuth mAuth = FirebaseAuth.instance;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (BuildContext context) {
+
+      DateTime? selectedDate;
+      TimeOfDay? selectedTime;
+      bool isSubmitting = false;
+
+      return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: sheetBgColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Grab handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "Book Appointment",
+                    style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Schedule a visit to $clinicName.",
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // --- DATE PICKER ---
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.primary),
+                    title: Text(
+                      selectedDate == null
+                          ? 'Select Date'
+                          : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                      style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
+                    ),
+                    trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                    onTap: () async {
+                      final DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().add(const Duration(days: 1)),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 60)),
+                      );
+                      if (pickedDate != null) {
+                        setState(() => selectedDate = pickedDate);
+                      }
+                    },
+                  ),
+                  Divider(color: Colors.grey.withOpacity(0.2)),
+
+                  // --- TIME PICKER ---
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.access_time, color: Theme.of(context).colorScheme.primary),
+                    title: Text(
+                      selectedTime == null
+                          ? 'Select Time'
+                          : selectedTime!.format(context),
+                      style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
+                    ),
+                    trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                    onTap: () async {
+                      final TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: const TimeOfDay(hour: 10, minute: 0),
+                      );
+                      if (pickedTime != null) {
+                        setState(() => selectedTime = pickedTime);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 30),
+
+                  // --- SUBMIT BUTTON ---
+                  ElevatedButton(
+                    onPressed: isSubmitting ? null : () async {
+                      if (selectedDate == null || selectedTime == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please select both a date and a time.'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                        return;
+                      }
+
+                      setState(() => isSubmitting = true);
+
+                      try {
+                        final appointmentDateTime = DateTime(
+                          selectedDate!.year,
+                          selectedDate!.month,
+                          selectedDate!.day,
+                          selectedTime!.hour,
+                          selectedTime!.minute,
+                        );
+
+                        await DatabaseService.instance.bookAppointment(mAuth.currentUser!.uid, clinicId, appointmentDateTime);
+
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Appointment requested at $clinicName!'),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setState(() => isSubmitting = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to book appointment: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 55),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    child: isSubmitting
+                        ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                    )
+                        : Text(
+                      "Confirm Booking",
+                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+                ],
+              ),
+            );
+          }
+      );
+    },
+  );
 }

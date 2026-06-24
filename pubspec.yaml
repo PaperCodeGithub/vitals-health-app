@@ -51,6 +51,7 @@ dependencies:
   permission_handler: ^12.0.1
   flutter_bloc: ^9.1.1
   geoflutterfire_plus: ^0.0.34
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
